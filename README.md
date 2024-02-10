@@ -19,6 +19,6 @@
 ![sequence-diagram.png](sequence-diagram.png)
 
 ### References
-Used video as a source of information: https://youtu.be/pUFGOngzJig
-To download axon server: https://developer.axoniq.io/en/axon-server/overview (default path: http://localhost:8024)
+- Used video as a source of information: https://youtu.be/pUFGOngzJig
+- To download axon server: https://developer.axoniq.io/en/axon-server/overview (default path: http://localhost:8024)
 
