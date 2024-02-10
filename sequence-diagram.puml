@@ -1,0 +1,46 @@
+@startuml
+skinparam participant {
+  BackgroundColor<<Command>> Green
+  BackgroundColor<<CancelCommand>> Red
+  BackgroundColor<<Event>> Silver
+  BackgroundColor<<CancelEvent>> Grey
+}
+
+participant "CreateOrder Command" as CreateOrder <<Command>>
+participant "Order Created Event" as OrderCreated <<Event>>
+participant "Validate Payment Command" as ValidatePayment <<Command>>
+participant "Payment Processed Event" as PaymentProcessed <<Event>>
+participant "Ship Order Command" as ShipOrder <<Command>>
+participant "Order Shipped Event" as OrderShipped <<Event>>
+participant "Send Invoice Command" as SendInvoice <<Command>>
+participant "Order Completed Event" as OrderCompleted <<Event>>
+participant "Complete Order Command" as CompleteOrder <<Command>>
+
+participant "Cancel Order Command" as CancelOrder <<CancelCommand>>
+participant "Order Cancelled Event" as OrderCancelled <<CancelEvent>>
+participant "Alert Cancellation Command" as AlertCancellation <<Command>>
+participant "Cancel Payment Command" as CancelPayment <<CancelCommand>>
+participant "Payment Cancelled Event" as PaymentCancelled <<CancelEvent>>
+participant "Cancel Shipment Command" as CancelShipment <<CancelCommand>>
+participant "Shipment Cancelled Event" as ShipmentCancelled <<CancelEvent>>
+
+CreateOrder -> OrderCreated : triggers
+OrderCreated -> ValidatePayment : triggers
+ValidatePayment -> PaymentProcessed : triggers
+PaymentProcessed -> ShipOrder : triggers
+ShipOrder -> OrderShipped : triggers
+OrderShipped -> SendInvoice : triggers
+SendInvoice -> OrderCompleted : triggers
+OrderCompleted -> CompleteOrder : triggers
+
+CancelOrder -> OrderCancelled : triggers
+OrderCancelled -> AlertCancellation : triggers
+CancelPayment -> PaymentCancelled : triggers
+PaymentCancelled -> CancelOrder: triggers
+CancelShipment -> ShipmentCancelled : triggers
+ShipmentCancelled -> PaymentCancelled: triggers
+
+OrderCreated --> CancelOrder : alternative path - compensation tx
+PaymentProcessed --> CancelPayment : alternative path - compensation tx
+OrderShipped --> CancelShipment : alternative path -  compensation tx
+@enduml
