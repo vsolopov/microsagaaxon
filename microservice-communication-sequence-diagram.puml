@@ -1,0 +1,22 @@
+@startuml
+actor User as "API /orders POST"
+participant Orchestrator as "Orchestrator\n(OrderSaga)"
+participant "Order Service" as Order
+participant "Product Service" as Product
+participant "Payment Service" as Payment
+participant "Shipment Service" as Shipment
+participant "Notification Service" as Notification
+
+User -> Orchestrator: CreateOrderCommand
+Orchestrator -> Order: CreateOrderCommand
+Order -> Orchestrator: OrderCreatedEvent
+Orchestrator -> Product: BlockProductCommand
+Product -> Orchestrator: ProductBlockedEvent
+Orchestrator -> Payment: ValidatePaymentCommand
+Payment -> Orchestrator: PaymentProcessedEvent
+Orchestrator -> Shipment: ShipOrderCommand
+Shipment -> Orchestrator: OrderShippedEvent
+
+Orchestrator -> Notification: [Optional] SendNotificationCommand
+
+@enduml
