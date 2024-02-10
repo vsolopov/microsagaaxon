@@ -15,7 +15,7 @@
 
 #### base microservices flow communication:
 ![microservice-communication-sequence-diagram.png](saga-orchestration-sequence-diagram.png)
-### flow with compensation transactions:
+#### flow with compensation transactions:
 ![sequence-diagram.png](sequence-diagram.png)
 
 #### References
