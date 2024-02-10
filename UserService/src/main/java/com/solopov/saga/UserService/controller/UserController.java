@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 public class UserController {
 
-    private transient QueryGateway queryGateway;
+    private final transient QueryGateway queryGateway;
 
     public UserController(QueryGateway queryGateway) {
         this.queryGateway = queryGateway;
@@ -24,7 +24,6 @@ public class UserController {
     public User getUserPaymentDetails(@PathVariable String userId) {
         GetUserPaymentDetailsQuery userPaymentDetailsQuery = new GetUserPaymentDetailsQuery(userId);
 
-        User user = queryGateway.query(userPaymentDetailsQuery, ResponseTypes.instanceOf(User.class)).join();
-        return user;
+        return queryGateway.query(userPaymentDetailsQuery, ResponseTypes.instanceOf(User.class)).join();
     }
 }

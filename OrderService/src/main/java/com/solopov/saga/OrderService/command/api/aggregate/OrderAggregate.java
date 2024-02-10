@@ -1,6 +1,8 @@
 package com.solopov.saga.OrderService.command.api.aggregate;
 
+import com.solopov.saga.CommonService.commands.CancelOrderCommand;
 import com.solopov.saga.CommonService.commands.CompleteOrderCommand;
+import com.solopov.saga.CommonService.events.OrderCanceledEvent;
 import com.solopov.saga.CommonService.events.OrderCompletedEvent;
 import com.solopov.saga.OrderService.command.api.command.CreateOrderCommand;
 import com.solopov.saga.OrderService.command.api.events.OrderCreatedEvent;
@@ -16,7 +18,7 @@ import org.springframework.beans.BeanUtils;
 @Aggregate
 @NoArgsConstructor
 @Slf4j
-public class  OrderAggregate {
+public class OrderAggregate {
 
 
     @AggregateIdentifier
@@ -50,7 +52,7 @@ public class  OrderAggregate {
     }
 
     @CommandHandler
-    public void on(CompleteOrderCommand command) {
+    public void handle(CompleteOrderCommand command) {
         log.info("CompleteOrderCommand receipt in OrderAggregate CommandHandler");
         //validate the command
         OrderCompletedEvent event = OrderCompletedEvent.builder()
@@ -63,9 +65,21 @@ public class  OrderAggregate {
     }
 
     @EventSourcingHandler
-    public void on(OrderCompletedEvent event){
+    public void on(OrderCompletedEvent event) {
         log.info("OrderCompletedEvent receipt in OrderAggregate EventSourcingHandler");
         this.orderStatus = event.getOrderStatus();
+    }
 
+    @CommandHandler
+    public void handle(CancelOrderCommand command) {
+        OrderCanceledEvent event = new OrderCanceledEvent();
+        BeanUtils.copyProperties(command, event);
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderCanceledEvent event) {
+        this.orderStatus = event.getOrderStatus();
     }
 }

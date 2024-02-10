@@ -1,11 +1,7 @@
 package com.solopov.saga.OrderService.command.api.saga;
 
-import com.solopov.saga.CommonService.commands.CompleteOrderCommand;
-import com.solopov.saga.CommonService.commands.ShipOrderCommand;
-import com.solopov.saga.CommonService.commands.ValidatePaymentCommand;
-import com.solopov.saga.CommonService.events.OrderCompletedEvent;
-import com.solopov.saga.CommonService.events.OrderShippedEvent;
-import com.solopov.saga.CommonService.events.PaymentProcessEvent;
+import com.solopov.saga.CommonService.commands.*;
+import com.solopov.saga.CommonService.events.*;
 import com.solopov.saga.CommonService.model.User;
 import com.solopov.saga.CommonService.queries.GetUserPaymentDetailsQuery;
 import com.solopov.saga.OrderService.command.api.events.OrderCreatedEvent;
@@ -48,6 +44,7 @@ public class OrderProcessingSaga {
         } catch (Exception e) {
             log.error(e.getMessage());
             //Start the compensating transaction
+            cancelOrderCommand(event.getOrderId());
         }
 
         ValidatePaymentCommand validatePaymentCommand = ValidatePaymentCommand.builder()
@@ -59,11 +56,21 @@ public class OrderProcessingSaga {
         commandGateway.sendAndWait(validatePaymentCommand);
     }
 
+    private void cancelOrderCommand(String orderId) {
+        CancelOrderCommand command = new CancelOrderCommand(orderId);
+        commandGateway.send(command);
+    }
+
     @SagaEventHandler(associationProperty = "orderId")
-    public void handle(PaymentProcessEvent event) {
-        log.info("PaymentProcessEvent in Saga for Order id: {}", event.getOrderId());
+    public void handle(PaymentProcessedEvent event) {
+        log.info("PaymentProcessedEvent in Saga for Order id: {}", event.getOrderId());
 
         try {
+
+//            TODO: Uncomment to check full saga-cancellation flow
+//            if(true){
+//                throw new Exception();
+//            }
             ShipOrderCommand command = ShipOrderCommand.builder()
                     .shipmentId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
@@ -72,7 +79,13 @@ public class OrderProcessingSaga {
         } catch (Exception e) {
             log.error(e.getMessage());
             //Start the compensating transaction
+            cancelPaymentCommand(event);
         }
+    }
+
+    private void cancelPaymentCommand(PaymentProcessedEvent event) {
+        CancelPaymentCommand command = new CancelPaymentCommand(event.getPaymentId(), event.getOrderId());
+        commandGateway.send(command);
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -94,5 +107,17 @@ public class OrderProcessingSaga {
 
         //here we could send command to notify user (f.e. SendInvoiceCommand).
         // But for now, it is not necessary, and we use @EndSaga to finish whole flow.
+    }
+
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderCanceledEvent event) {
+        log.info("OrderCancelEvent in Saga for Order Id: {}", event.getOrderId());
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(PaymentCancelledEvent event) {
+        log.info("PaymentCancelledEvent in Saga for Order Id: {}", event.getOrderId());
+        cancelOrderCommand(event.getOrderId());
     }
 }
